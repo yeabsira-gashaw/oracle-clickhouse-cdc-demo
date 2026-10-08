@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="620" viewBox="0 0 1320 620" role="img" aria-labelledby="title desc">
+  <title id="title">Oracle to ClickHouse CDC architecture</title>
+  <desc id="desc">Oracle Database emits redo and archive logs read by Debezium in Kafka Connect. Debezium publishes row events to Kafka. ClickHouse consumes those events with a Kafka engine table and materialized view, then writes versioned rows to a ReplacingMergeTree table.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M1,1 L11,6 L1,11 z" fill="#475569"/>
+    </marker>
+    <style>
+      .bg{fill:#f8fafc}.title{font:700 26px system-ui,-apple-system,sans-serif;fill:#0f172a}.subtitle{font:15px system-ui,-apple-system,sans-serif;fill:#475569}
+      .box{stroke-width:2;rx:18}.head{font:700 19px system-ui,-apple-system,sans-serif;fill:#0f172a}.body{font:15px system-ui,-apple-system,sans-serif;fill:#334155}.small{font:13px system-ui,-apple-system,sans-serif;fill:#475569}
+      .arrow{stroke:#475569;stroke-width:3;fill:none;marker-end:url(#arrow)}.label{font:600 13px system-ui,-apple-system,sans-serif;fill:#334155}
+      .oracle{fill:#fff7ed;stroke:#ea580c}.connect{fill:#eff6ff;stroke:#2563eb}.kafka{fill:#fefce8;stroke:#ca8a04}.ch{fill:#f0fdf4;stroke:#16a34a}
+    </style>
+  </defs>
+  <rect class="bg" width="1320" height="620"/>
+  <text x="54" y="58" class="title">Oracle → Kafka → ClickHouse CDC</text>
+  <text x="54" y="86" class="subtitle">Snapshot existing rows, then stream committed INSERT / UPDATE / DELETE changes</text>
+
+  <rect x="55" y="220" width="270" height="220" class="box oracle"/>
+  <text x="82" y="260" class="head">Oracle Database Free</text>
+  <text x="82" y="300" class="body">PDB: FREEPDB1</text>
+  <text x="82" y="329" class="body">APP.CUSTOMERS</text>
+  <text x="82" y="367" class="small">ARCHIVELOG + supplemental logging</text>
+  <text x="82" y="397" class="small">Common LogMiner account: C##DBZUSER</text>
+
+  <rect x="395" y="155" width="290" height="150" class="box connect"/>
+  <text x="425" y="195" class="head">Debezium Kafka Connect</text>
+  <text x="425" y="232" class="body">Oracle LogMiner connector</text>
+  <text x="425" y="263" class="small">Initial snapshot + unwrap SMT</text>
+
+  <rect x="395" y="365" width="290" height="130" class="box kafka"/>
+  <text x="425" y="405" class="head">Apache Kafka</text>
+  <text x="425" y="442" class="body">Topic: oracle-cdc.APP.CUSTOMERS</text>
+  <text x="425" y="472" class="small">Single-node KRaft event backbone</text>
+
+  <rect x="770" y="155" width="255" height="150" class="box ch"/>
+  <text x="800" y="195" class="head">ClickHouse Kafka table</text>
+  <text x="800" y="232" class="body">JSONEachRow consumer</text>
+  <text x="800" y="263" class="small">Maps uppercase Oracle fields</text>
+
+  <rect x="770" y="365" width="255" height="130" class="box ch"/>
+  <text x="800" y="405" class="head">Materialized view</text>
+  <text x="800" y="442" class="body">Converts ID / timestamp</text>
+  <text x="800" y="472" class="small">Marks delete tombstones</text>
+
+  <rect x="1090" y="255" width="190" height="220" class="box ch"/>
+  <text x="1112" y="295" class="head">ClickHouse</text>
+  <text x="1112" y="328" class="head">ReplacingMergeTree</text>
+  <text x="1112" y="369" class="body">poc.customer_events</text>
+  <text x="1112" y="407" class="small">Versioned by Kafka offset</text>
+  <text x="1112" y="437" class="small">Query latest with FINAL</text>
+
+  <path d="M325 280 C350 280 365 230 395 230" class="arrow"/>
+  <text x="336" y="206" class="label">redo / archive logs</text>
+  <path d="M540 305 L540 365" class="arrow"/>
+  <text x="552" y="343" class="label">flattened row events</text>
+  <path d="M685 430 C730 430 725 230 770 230" class="arrow"/>
+  <text x="694" y="328" class="label">consume</text>
+  <path d="M897 305 L897 365" class="arrow"/>
+  <path d="M1025 430 L1090 430" class="arrow"/>
+
+  <rect x="55" y="535" width="1225" height="48" rx="12" fill="#e2e8f0"/>
+  <text x="78" y="565" class="small">Operator workflow: commit changes in Oracle → wait for asynchronous CDC → query poc.customer_events FINAL in ClickHouse</text>
+</svg>
